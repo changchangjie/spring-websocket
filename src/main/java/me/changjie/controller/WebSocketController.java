@@ -1,12 +1,17 @@
 package me.changjie.controller;
 
+import me.changjie.common.UserInfoConstant;
 import org.springframework.web.socket.server.standard.SpringConfigurator;
 
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * configurator = SpringConfigurator.class是为了使该类可以通过Spring注入
  * Created by ChangJie on 2019-03-07.
  */
-@ServerEndpoint(value = "/websocket",configurator = SpringConfigurator.class)
+@ServerEndpoint(value = "/websocket/{userId}",configurator = SpringConfigurator.class)
 public class WebSocketController {
 
     private static AtomicInteger onlineCount = new AtomicInteger(0);
@@ -42,13 +47,18 @@ public class WebSocketController {
      */
     @OnOpen
     public void onOpen(Session session) throws Exception {
+
+        String userName = getUserName(session);
+
         this.session = session;
         //加入聊天室
         chatRoomSet.add(this);
         //在线数加1
         onlineCount.incrementAndGet();
-        broadcastToAll("有新连接加入");
-        System.out.println("有新连接加入！当前在线人数为" + onlineCount.get());
+
+        broadcastToAll(LocalDateTime.now() +" "+ userName+" 加入了群聊");
+
+        System.out.println(userName+"加入了群聊！当前在线人数为" + onlineCount.get());
     }
 
     /**
@@ -56,10 +66,21 @@ public class WebSocketController {
      */
     @OnClose
     public void onClose() throws Exception {
+
+        String userName = getUserName(session);
+
         chatRoomSet.remove(this);
         onlineCount.decrementAndGet();
-        broadcastToAll("有一连接关闭");
-        System.out.println("有一连接关闭！当前在线人数为" + onlineCount.get());
+
+        broadcastToAll(LocalDateTime.now() +" "+ userName+" 退出了群聊");
+        System.out.println(userName+"退出了群聊！当前在线人数为" + onlineCount.get());
+    }
+
+    private String getUserName(Session session){
+        Map<String, String> map = session.getPathParameters();
+        Integer userId = Integer.valueOf(map.get("userId"));
+        String userName = UserInfoConstant.idNameMap.get(userId);
+        return userName;
     }
 
     /**
@@ -69,8 +90,11 @@ public class WebSocketController {
      */
     @OnMessage
     public void onMessage(String message, Session session) throws Exception {
+
+        String userName = getUserName(session);
+
         System.out.println("来自客户端的消息:" + message);
-        broadcastToAll(message);
+        broadcastToAll(LocalDateTime.now()+" "+ userName + ":" + message);
     }
 
     private void broadcastToAll(String message) throws Exception {

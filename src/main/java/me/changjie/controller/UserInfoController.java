@@ -1,6 +1,7 @@
 package me.changjie.controller;
 
 import me.changjie.common.Response;
+import me.changjie.common.UserInfoConstant;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,19 +18,12 @@ import java.util.Map;
 @Controller
 public class UserInfoController {
 
-    private static Map<String, Integer> userInfoMap = new HashMap<String, Integer>();
-
-    static {
-        userInfoMap.put("changjie", 1);
-        userInfoMap.put("ergou", 2);
-        userInfoMap.put("shuang", 3);
-    }
 
     @RequestMapping(value = "login")
     @ResponseBody
     public Response login(String userName){
         Response response = new Response();
-        Integer userId = userInfoMap.get(userName);
+        Integer userId = UserInfoConstant.nameIdMap.get(userName);
         if(userId == null){
             response.setResult("400");
             response.setMessage("用户不存在");

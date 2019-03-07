@@ -9,7 +9,8 @@
 </head>
 <body class="container">
     <input id="userId" type="hidden" value="${userId}">
-    <button onclick="close()">关闭连接</button>
+    <%--注意下面方法名不能用close,应该是跟内置的冲突了--%>
+    <button class="btn btn-primary" onclick="webSocketClose()">退出群聊</button>
     <div id="message" style="height: 200px;background-color:gray;">
 
     </div>
@@ -21,11 +22,13 @@
 </body>
 <script type="text/javascript">
 
+    var userId  = $("#userId").val();
+
     var websocket = null;
 
     //判断当前浏览器是否支持WebSocket
     if ('WebSocket' in window) {
-        websocket = new WebSocket("ws://localhost:8080/spring_websocket_war_exploded/websocket");
+        websocket = new WebSocket("ws://localhost:8080/spring_websocket_war_exploded/websocket/"+userId);
     }
     else {
         alert("对不起！你的浏览器不支持webSocket")
@@ -41,7 +44,7 @@
         // setMessageInnerHTML("加入连接");
     };
 
-    function close() {
+    function webSocketClose() {
         websocket.close();
     }
 
